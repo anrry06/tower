@@ -1,0 +1,27 @@
+#tower {
+    position: relative;
+    float: left;
+}
+#log {
+    position: relative;
+    width: 400px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#log li {
+    border: 1px solid;
+    list-style: none;
+    padding: 5px;
+    margin-bottom: 1px;
+}
+
+#log li .game {
+    color: green;
+}
+#log li .turret {
+    color: red;
+}
+#log li .enemy {
+    color: blue;
+}
