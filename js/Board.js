@@ -13,6 +13,7 @@ class Board {
         this.container = document.querySelector('#' + this.options.id);
         this.paper = Raphael(this.options.id);
         this.squares = {};
+        this.prevSquares = [];
 
         this.initEvents();
     }
@@ -56,7 +57,7 @@ class Board {
 
     initEvents() {
         this.container.onclick = this.click;
-        // this.container.onmousemove = this.mouseMove;
+        this.container.onmousemove = this.mousemove;
     }
 
     click = (e) => {
@@ -66,8 +67,33 @@ class Board {
         this.game.addTurret(...coord)
     }
 
-    mouseMove = (e) => {
+    mousemove = (e) => {
         e.preventDefault();
+        if(this.prevSquares.length > 0){
+            this.prevSquares.forEach(ps => {
+                if(ps)
+                    ps.attr({ fill: config.squareStyle.lightgray.white })
+            })
+        }
+        this.prevSquares = [];
+        let [x, y] = this.coord.toGrid(e.offsetX, e.offsetY, this.game.squareSize);
+        if(this.squares[y][x] === undefined){
+            return;
+        }
+        this.squares[y][x].attr({ fill: config.squareStyle.lightgray.fill })
+        this.prevSquares.push(this.squares[y][x]);
+
+        if(this.game.controls.turretType && this.game.controls.turretType === 'big'){
+            let sq = this.squares[y] ? this.squares[y][x + 1] : null;
+            if(sq) sq.attr({ fill: config.squareStyle.lightgray.fill });
+            this.prevSquares.push(sq);
+            sq = this.squares[y + 1] ? this.squares[y + 1][x + 1] : null;
+            if(sq) sq.attr({ fill: config.squareStyle.lightgray.fill });
+            this.prevSquares.push(sq);
+            sq = this.squares[y + 1] ? this.squares[y + 1][x] : null;
+            if(sq) sq.attr({ fill: config.squareStyle.lightgray.fill });
+            this.prevSquares.push(sq);
+        }
     }
 
     coord = {

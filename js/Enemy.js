@@ -7,12 +7,14 @@ class Enemy {
             dy: null,
             hp: 10,
             speed: 10,
+            gain: 1,
             game: null
         }, options);
 
         this.game = this.options.game;
 
         this.id = this.options.game.enemies.length;
+        this.destroyed = false;
 
         // debugLow(this);
         // debugLow(this.options);
@@ -39,22 +41,24 @@ class Enemy {
     }
 
     removeHp(dmg) {
-        debug(`Enemy ${this.id}: Losing ${dmg} health point`);
-        this.options.hp -= dmg;
-        debug(`Enemy ${this.id}: ${this.options.hp} health point left`);
-        if (this.options.hp <= 0) {
-            debug(`Enemy: Destroyed`);
-            this.destroy = true;
-            this.game.removeEnemy(this);
-        }
-        this.square.animate(config.squareStyle.red, 500, 'linear', () => {
+        if(this.destroyed === false){
+            debug(`Enemy ${this.id}: Losing ${dmg} health point`);
+            this.options.hp -= dmg;
+            debug(`Enemy ${this.id}: ${this.options.hp} health point left`);
             if (this.options.hp <= 0) {
-                this.square.remove();
+                debug(`Enemy: Destroyed`);
+                this.destroyed = true;
+                this.game.removeEnemy(this);
             }
-            else {
-                this.square.animate(config.squareStyle.blue, 500, 'linear');
-            }
-        });
+            this.square.animate(config.squareStyle.red, 150, 'linear', () => {
+                if (this.options.hp <= 0) {
+                    this.square.remove();
+                }
+                else {
+                    this.square.animate(config.squareStyle.blue, 150, 'linear');
+                }
+            });
+        }
     }
 
     async move() {

@@ -1,24 +1,24 @@
 let map = {
-    cols: 20,
-    rows: 20,
+    cols: 45,
+    rows: 45,
     entry: {
         length: 1,
-        width: 4,
+        width: 5,
         x: 0,
-        y: 9
+        y: 20
     },
     exit: {
         length: 1,
-        width: 4,
-        x: 19,
-        y: 8
+        width: 5,
+        x: 44,
+        y: 20
     },
+    squareSize: 20
 }
 
 let tower = new Game({
     id: 'tower',
-    squareSize: 30,
-    // map: map
+    map: map
 });
 
 tower.build().then(() => {

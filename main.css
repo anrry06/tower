@@ -25,3 +25,10 @@
 #log li .enemy {
     color: blue;
 }
+
+#controls {
+    position: relative;
+    width: 250px;
+    float: left;
+    margin-left: 10px;
+}

@@ -4,12 +4,20 @@ let config = {
             'fill': 'white',
             'stroke-opacity': 0.2, // the border
         },
+        lightgray: {
+            'fill': '#CCCCCC',
+            'stroke-opacity': 0.2, // the border
+        },
         green: {
             'fill': 'green',
             'stroke-opacity': 0.2, // the border
         },
         red: {
             'fill': 'red',
+            'stroke-opacity': 0.2, // the border
+        },
+        lightred: {
+            'fill': '#F77E7E',
             'stroke-opacity': 0.2, // the border
         },
         blue: {
@@ -29,7 +37,7 @@ let prevDebug = {
     enemy: null
 }
 let debug = (...args) => {
-    // console.log(...args);
+    console.log(...args);
     if (args[0].match(/Game/i)) {
         if (prevDebug.game && prevDebug.game === args[0]) {
             return;

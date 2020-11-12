@@ -3,23 +3,24 @@ class Game {
         this.options = Object.assign({
             id: null,
             map: {
-                cols: 20,
-                rows: 20,
+                cols: 30,
+                rows: 30,
                 entry: {
                     length: 4,
                     width: 1,
-                    x: 8,
+                    x: 13,
                     y: 0
                 },
                 exit: {
                     length: 4,
                     width: 1,
-                    x: 8,
-                    y: 19
-                }
+                    x: 13,
+                    y: 29
+                },
+                squareSize: 20,
             },
-            squareSize: 20,
-            lives: 20
+            lives: 20,
+            money: 85
         }, options);
 
         this.id = this.options.id;
@@ -27,7 +28,8 @@ class Game {
         this.rows = this.options.map.rows;
         this.map = this.options.map;
         this.lives = this.options.lives;
-        this.squareSize = this.options.squareSize;
+        this.money = this.options.money;
+        this.squareSize = this.map.squareSize;
 
         this.container = document.querySelector(this.options.id);
         this.entrySquares = [];
@@ -63,8 +65,9 @@ class Game {
 
             this.buildMap();
 
-            
             this.controls = new Controls(this);
+            this.controls.setLives(this.lives);
+            this.controls.setMoney(this.money);
 
         } catch (error) {
             throw error;
@@ -83,8 +86,9 @@ class Game {
         let startY = this.map.entry.y;
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < width; j++) {
-                let square = this.board.squares[startY + j][startX + i];
-                this.board.colorizeSquare(square, config.squareStyle.green.fill);
+                let [x, y] = this.board.coord.toMouse(startX + i, startY + j, this.squareSize)
+                let square = this.board.paper.rect(x, y, this.squareSize, this.squareSize);
+                square.attr(config.squareStyle.green);
                 this.entrySquares.push(square);
             }
         }
@@ -97,8 +101,9 @@ class Game {
         let startY = this.map.exit.y;
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < width; j++) {
-                let square = this.board.squares[startY + j][startX + i];
-                this.board.colorizeSquare(square, config.squareStyle.red.fill);
+                let [x, y] = this.board.coord.toMouse(startX + i, startY + j, this.squareSize)
+                let square = this.board.paper.rect(x, y, this.squareSize, this.squareSize);
+                square.attr(config.squareStyle.red);
                 this.exitSquares.push(square);
             }
         }
@@ -142,8 +147,8 @@ class Game {
             y: entryCoord[1],
             dx: exitCoord[0],
             dy: exitCoord[1],
-            hp: 100,
-            speed: 50,
+            hp: 10,
+            speed: 30,
             game: this
         });
 
@@ -163,6 +168,11 @@ class Game {
         this.waveLength -= 1;
         if (enemy.destroy === false) {
             this.lives -= 1;
+            this.controls.setLives(this.lives);
+        }
+        else {
+            this.money += enemy.options.gain;
+            this.controls.setMoney(this.money);
         }
         if(this.lives === 0 || this.waveLength === 0){
             debug(`Game: Stopping`);
@@ -171,27 +181,53 @@ class Game {
 }
 
     addTurret(x, y) {
-        debug(`Game: Adding new turret`);
-        // let turret = new Turret({
-        let turret = new RedTurret({
+        let turretType = this.controls.turretType;
+        if(turretType === null){
+            return;
+        }
+
+        let turretCat = this.controls.turretCat;
+        let turretClass = null;
+
+        let type = [turretType, turretCat].join('-');
+        switch(type){
+            case 'big-basic':
+                turretClass = BigTurret;
+                break;
+            case 'big-red':
+                turretClass = BigRedTurret;
+                break;
+            case 'small-basic':
+                turretClass = Turret;
+                break;
+            case 'small-red':
+                turretClass = RedTurret;
+                break;
+        }
+
+        let turret = new turretClass({
             x: x,
             y: y,
-            dmg: 10,
-            range: 40,
             game: this
         });
 
-        this.turrets.push(turret);
+        if(this.money > 0 && this.money - turret.options.cost >= 0){
+            debug(`Game: Adding new turret ${type}`);
 
-        turret.start();
+            turret.build()
+            this.turrets.push(turret);
+    
+            turret.start();
+            
+            this.money -= turret.options.cost;
+            this.controls.setMoney(this.money);
+        }
     }
 
     startWave(){
         this.start();
-        this.lives = this.options.lives;
-        this.turrets.map(t => {
-            t.restart();
-        })
+        this.turrets.map(t => t.restart())
+
         tower.addMultipleEnemies(10, 500);
     }
 
@@ -224,7 +260,6 @@ class Game {
             y: randomExitSquare.attr('y')
         }
     }
-
 
 }
 

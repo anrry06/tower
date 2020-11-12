@@ -1,6 +1,6 @@
 class Timer {
-    constructor(ms){
-        this.ms = ms || 10;
+    constructor(cptInterval){
+        this.cptInterval = cptInterval || 10;
         this.state = 0;
         this.totalProgress = 0;
         this.tasks = [];
@@ -9,24 +9,44 @@ class Timer {
         // console.log(...args);
     }
 
+    // start(){
+    //     this.state = 1;
+    //     let cpt = 0;
+
+    //     let start = new Date().getTime();
+    
+    //     let run = (timestamp) => {
+    //         cpt++;
+
+    //         // console.log(cpt, new Date().getTime() - start);
+    //         // start = new Date().getTime();
+
+    //         if(cpt%this.cptInterval === 0){
+    //             this.totalProgress += this.cptInterval;
+    //             this.ping();
+    //             cpt = 0;
+    //         }
+
+    //         if(this.state === 1){    
+    //             requestAnimationFrame(run);
+    //         }
+    //     }
+        
+    //     run();
+    // }
+
     start(){
         this.state = 1;
-        let cpt = 0;
-    
-        let run = (timestamp) => {
-            cpt++;
-            if(cpt%this.ms === 0){
-                this.totalProgress += this.ms;
-                this.ping();
-                cpt = 0;
-            }
+        let run = () => {
+            this.totalProgress += this.cptInterval;
+            this.ping();
 
             if(this.state === 1){    
-                requestAnimationFrame(run);
+                setTimeout(run, this.cptInterval);
             }
         }
         
-        requestAnimationFrame(run);
+        setTimeout(run, this.cptInterval);
     }
 
     stop(){
@@ -34,17 +54,25 @@ class Timer {
     }
 
     ping(){
-        this.tasks.forEach(t => {
-            if(this.totalProgress%t.ms === 0){
-                this.debug(`EXECUTE TASK ${t.key}`, this.tasks.map(t => t.key))
-                t.fn();
+        for(let i = 0, l = this.tasks.length; i < l; i++){
+            if(this.tasks[i] && (this.totalProgress / this.cptInterval)%this.tasks[i].cptInterval === 0){
+                let keys = this.tasks.map(t => t.key).join(' ,');
+                this.debug(`EXECUTE TASK ${this.tasks[i].key} - ${keys}`)
+                this.tasks[i].fn();
             }
-        })
+        }
     }
 
     addTask(task){
         this.debug(`REGISTER TASK ${task.key}`)
-        this.tasks.push(task);
+        let taskIndex = this.tasks.findIndex(t => t.key === task.key);
+        if(taskIndex === -1){
+            this.tasks.push(task);
+        }
+        else {
+            this.tasks[taskIndex] = task;
+        }
+        
     }
 
     removeTask(key){

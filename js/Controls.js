@@ -4,6 +4,9 @@ class Controls {
         this.game = game;
         this.container = document.querySelector('#controls');
 
+        this.turretType = null;
+        this.turretCat = null;
+
         let html = this.getHtml();
         this.container.innerHTML = html;
         this.initEvents();
@@ -11,6 +14,9 @@ class Controls {
 
     initEvents(){
         this.container.querySelector('#new-wave').onclick = this.newWave;
+        this.container.querySelectorAll('.add-turret').forEach(bt => {
+            bt.onclick = this.addTurret;
+        })
     }
 
     newWave = (e) => {
@@ -18,10 +24,49 @@ class Controls {
         this.game.startWave();
     }
 
+    addTurret = (e) => {
+        e.preventDefault();
+        this.turretCat = e.target.getAttribute('data-cat');
+        this.turretType = e.target.getAttribute('data-type');
+        if(e.target.classList.contains('btn-info')){
+            this.turretType = null;
+            this.turretCat = null;
+            e.target.classList.remove('btn-info');
+        }
+        else {
+            this.container.querySelectorAll('.add-turret').forEach(bt => {
+                bt.classList.remove('btn-info');
+            })
+            e.target.classList.add('btn-info');
+        }
+    }
+
+    setLives(lives){
+        this.container.querySelector('#lives').innerHTML = lives;
+    }
+
+    setMoney(money){
+        this.container.querySelector('#money').innerHTML = money;
+    }
+
     getHtml(){
         return `
-            <button id="new-wave">New Wave</button>
-            <button id="add-turret">Add Turret</button>    
+            <button class="btn btn-primary" id="new-wave">New Wave</button>
+            <hr>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button class="btn btn-secondary add-turret" data-type="small" data-cat="basic">Small turret</button>
+                <button class="btn btn-secondary add-turret" data-type="small" data-cat="red">Small red turret</button>
+            </div>
+            <hr>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button class="btn btn-secondary add-turret" data-type="big" data-cat="basic">Big turret</button>
+                <button class="btn btn-secondary add-turret" data-type="big" data-cat="red">Big red turret</button>
+            </div>
+            <hr>
+            <ul>
+                <li>lives: <font id="lives">0</font></li>
+                <li>money: <font id="money">0</font></li>
+            </ul>
         `;
     }
 }
