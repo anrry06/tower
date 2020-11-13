@@ -30,21 +30,42 @@ class Turret {
         debugLow(`TURRET ID ${this.id}`)
 
         let gridSize = this.size / this.game.squareSize;
-        for(let i = 0; i < gridSize; i++){
-            this.game.grid.setWalkableAt(this.options.x + i, this.options.y, false);
-            this.game.grid.setWalkableAt(this.options.x, this.options.y + i, false);
-            this.game.grid.setWalkableAt(this.options.x + i, this.options.y + i, false);
+        this.matrix = [[this.options.x, this.options.y]];
+        if(gridSize > 1){
+            this.matrix.push([this.options.x, this.options.y + 1])
+            this.matrix.push([this.options.x + 1, this.options.y + 1])
+            this.matrix.push([this.options.x + 1, this.options.y])
         }
 
         this.options.range = this.options.range || this.size * 2;
         console.log(this.options);
         // debugLow(this);
         // debugLow(this.options);
+    }
 
-        // this.build()
+    blockPath(){
+        let gridSize = this.size / this.game.squareSize;
+        for(let i = 0; i < gridSize; i++){
+            this.game.grid.setWalkableAt(this.options.x + i, this.options.y, false);
+            this.game.grid.setWalkableAt(this.options.x, this.options.y + i, false);
+            this.game.grid.setWalkableAt(this.options.x + i, this.options.y + i, false);
+        }
+    }
+
+    unblockPath(){
+        let gridSize = this.size / this.game.squareSize;
+        for(let i = 0; i < gridSize; i++){
+            this.game.grid.setWalkableAt(this.options.x + i, this.options.y, true);
+            this.game.grid.setWalkableAt(this.options.x, this.options.y + i, true);
+            this.game.grid.setWalkableAt(this.options.x + i, this.options.y + i, true);
+        }
     }
 
     build(){
+        if(this.options.sound){
+            this.sound = new sound(this.options.sound);
+        }
+
         this.buildBody();
         this.buildTurret();
         this.buildCannon();
@@ -184,7 +205,7 @@ class Turret {
     }
 
     enableFollow(same){
-        if(same === true || this.shooting === true){
+        if(this.shooting === true){
             return;
         }
 
@@ -198,7 +219,6 @@ class Turret {
                 let animParams = {
                     transform: `r${data.angle} ${data.center.x} ${data.center.y}`
                 }
-                // let anim = Raphael.animation(animParams, 10, 'linear');
                 this.turretSet.animate(animParams, 10, 'linear', () => {
                     if(this.enemy){
                         if(this.shooting === false && this.enemy.destroyed === false){
@@ -229,15 +249,9 @@ class Turret {
 
         this.shooting = true;
 
-        // clearTimeout(this.shootingTimeout);
-
         debug(`Turret ${this.id}: Shooting on an new enemy ${this.enemy.id}`);
         this.shoot();
         this.reloading = true;
-
-        // this.shootingTimeout = setTimeout(() => {
-        //     this.reload = false;
-        // }, 1000 / this.options.speed);
 
         this.body.attr({ fill: config.squareStyle[this.style.reload].fill });
         this.body.animate(config.squareStyle[this.style.body], 1000 / this.options.speed, 'linear', ()=> {
@@ -246,6 +260,10 @@ class Turret {
     }
 
     shoot(){
+        if(this.sound){
+            this.sound.play();
+        }
+
         this.cannon.animate(config.squareStyle[this.style.shoot], this.options.shootingCannonMs, 'linear', () => {
             this.cannon.animate(config.squareStyle[this.style.cannon], this.options.shootingCannonMs, 'linear')
         })
@@ -253,12 +271,19 @@ class Turret {
         let coord = this.game.board.coord.toMouse(this.options.x, this.options.y, this.game.squareSize);
         let center = coord.map(c => c + (this.size / 2));
         let bulletCoord = [coord[0] + (this.size / 2), center[1]];
-        let bullet = this.game.board.paper.rect(...bulletCoord, 10, 10)
+        // let bullet = this.game.board.paper.rect(...bulletCoord, 10, 10)
+        let bullet = this.game.board.paper.circle(...bulletCoord, 5);
+        bullet.attr({ fill: config.squareStyle[this.style.turret].fill })
         bullet.animate({
-            x: this.enemy.getCenterX(),
-            y: this.enemy.getCenterY()
+            cx: this.enemy.getCenterX(),
+            cy: this.enemy.getCenterY()
         }, 150, 'linear', () => {
-            this.enemy.removeHp(this.options.dmg);
+            if(this.sound){
+                this.sound.stop();
+            }
+            if(this.enemy){
+                this.enemy.removeHp(this.options.dmg);
+            }
             bullet.remove();
             this.disableFollow('shoot');
             this.shooting = false;
@@ -305,6 +330,23 @@ class Turret {
             }
         }
     }
+
+    isCrossing(matrix){
+        let found = this.matrix.find(p => {
+            for(let i = 0, l = matrix.length; i < l; i++){
+                // console.log(p, matrix[i], p.join('') === matrix[i].join(''))
+                if(p.join('') === matrix[i].join('')){
+                    return true;
+                }
+            }
+        });
+
+        if(found){
+            return true;
+        }
+
+        return false;
+    }
 }
 
 class RedTurret extends Turret{
@@ -349,6 +391,7 @@ class BigTurret extends Turret{
                 reload: 'green'
             },
             cost: 5,
+            sound: './sounds/M1 Garand Single.mp3',
             game: null
         }, options);
 
@@ -401,6 +444,7 @@ class BigRedTurret extends BigTurret{
                 reload: 'green'
             },
             cost: 25,
+            sound: './sounds/Laser.mp3',
             game: null
         }, options);
 

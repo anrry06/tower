@@ -49,6 +49,14 @@ class Controls {
         this.container.querySelector('#money').innerHTML = money;
     }
 
+    setWave(wave, waveId){
+        this.container.querySelector('#wave-id').innerHTML = waveId;
+        this.container.querySelector('#quantity').innerHTML = wave.quantity;
+        this.container.querySelector('#health').innerHTML = wave.health;
+        this.container.querySelector('#speed').innerHTML = wave.speed;
+        this.container.querySelector('#gain').innerHTML = wave.gain;
+    }
+
     getHtml(){
         return `
             <button class="btn btn-primary" id="new-wave">New Wave</button>
@@ -66,6 +74,14 @@ class Controls {
             <ul>
                 <li>lives: <font id="lives">0</font></li>
                 <li>money: <font id="money">0</font></li>
+            </ul>
+            <hr>
+            <ul>
+                <li>wave id: <font id="wave-id">0</font></li>
+                <li>quantity: <font id="quantity">0</font></li>
+                <li>health: <font id="health">0</font></li>
+                <li>speed: <font id="speed">0</font></li>
+                <li>gain: <font id="gain">0</font></li>
             </ul>
         `;
     }

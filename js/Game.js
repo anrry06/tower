@@ -20,7 +20,8 @@ class Game {
                 squareSize: 20,
             },
             lives: 20,
-            money: 85
+            money: 85,
+            waves: []
         }, options);
 
         this.id = this.options.id;
@@ -30,13 +31,17 @@ class Game {
         this.lives = this.options.lives;
         this.money = this.options.money;
         this.squareSize = this.map.squareSize;
+        this.waves = this.options.waves || [];
 
         this.container = document.querySelector(this.options.id);
         this.entrySquares = [];
+        this.entryMatrix = [];
         this.exitSquares = [];
+        this.exitMatrix = [];
         this.enemies = [];
         this.turrets = [];
         this.state = 0; // 0 stopped - 1 started
+        this.waveId = -1;
 
         this.timer = new Timer(10);
         this.timer.start();
@@ -90,6 +95,7 @@ class Game {
                 let square = this.board.paper.rect(x, y, this.squareSize, this.squareSize);
                 square.attr(config.squareStyle.green);
                 this.entrySquares.push(square);
+                this.entryMatrix.push([startX + i, startY + j]);
             }
         }
     }
@@ -105,15 +111,21 @@ class Game {
                 let square = this.board.paper.rect(x, y, this.squareSize, this.squareSize);
                 square.attr(config.squareStyle.red);
                 this.exitSquares.push(square);
+                this.exitMatrix.push([startX + i, startY + j]);
             }
         }
     }
 
-    start(){
+    isPathOpen() {
+        let path = this.getPath(this.map.entry.x, this.map.entry.y, this.map.exit.x, this.map.exit.y);
+        return path.length > 0;
+    }
+
+    start() {
         this.state = 1;
     }
-  
-    stop(){
+
+    stop() {
         this.state = 0;
     }
 
@@ -147,8 +159,9 @@ class Game {
             y: entryCoord[1],
             dx: exitCoord[0],
             dy: exitCoord[1],
-            hp: 10,
-            speed: 30,
+            hp: this.currentWave.health,
+            speed: this.currentWave.speed,
+            gain: this.currentWave.gain,
             game: this
         });
 
@@ -174,15 +187,15 @@ class Game {
             this.money += enemy.options.gain;
             this.controls.setMoney(this.money);
         }
-        if(this.lives === 0 || this.waveLength === 0){
+        if (this.lives === 0 || this.waveLength === 0) {
             debug(`Game: Stopping`);
             this.stop();
         }
-}
+    }
 
     addTurret(x, y) {
         let turretType = this.controls.turretType;
-        if(turretType === null){
+        if (turretType === null) {
             return;
         }
 
@@ -190,7 +203,7 @@ class Game {
         let turretClass = null;
 
         let type = [turretType, turretCat].join('-');
-        switch(type){
+        switch (type) {
             case 'big-basic':
                 turretClass = BigTurret;
                 break;
@@ -211,24 +224,61 @@ class Game {
             game: this
         });
 
-        if(this.money > 0 && this.money - turret.options.cost >= 0){
+        let crossing = false;
+        // another turret
+        for (let i = 0, l = this.turrets.length; i < l; i++) {
+            if (this.turrets[i].isCrossing(turret.matrix)) {
+                crossing = true;
+                i = l;
+                return;
+            }
+        }
+
+        // entry and exit
+        if (crossing === false
+            && (turret.isCrossing(this.entryMatrix) || turret.isCrossing(this.exitMatrix))) {
+            crossing = true;
+            return;
+        }
+
+        // map limit
+        if (crossing === false && (x >= this.map.cols - 1 || y >= this.map.rows - 1)) {
+            crossing = true;
+            return;
+        }
+
+        // no path for enemies
+        turret.blockPath();
+        if (this.isPathOpen() === false) {
+            return turret.unblockPath();
+        }
+
+        if (!crossing && this.money > 0 && this.money - turret.options.cost >= 0) {
             debug(`Game: Adding new turret ${type}`);
 
             turret.build()
             this.turrets.push(turret);
-    
+
             turret.start();
-            
+
             this.money -= turret.options.cost;
             this.controls.setMoney(this.money);
         }
     }
 
-    startWave(){
+    startWave() {
+        this.waveId++;
+        if (!this.waves[this.waveId]) {
+            return alert('c fini');
+        }
+
+        this.currentWave = this.waves[this.waveId];
+        this.controls.setWave(this.currentWave, this.waveId);
+
         this.start();
         this.turrets.map(t => t.restart())
 
-        tower.addMultipleEnemies(10, 500);
+        tower.addMultipleEnemies(this.currentWave.quantity, 500);
     }
 
     getPath(x, y, dx, dy) {

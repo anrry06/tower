@@ -18,7 +18,8 @@ let map = {
 
 let tower = new Game({
     id: 'tower',
-    map: map
+    map: map,
+    waves: waves
 });
 
 tower.build().then(() => {
