@@ -1,4 +1,4 @@
-let waves = [
+let wavesJson = [
     {
         "name": "alien",
         "level": 1,

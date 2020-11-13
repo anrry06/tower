@@ -32,6 +32,7 @@ class Game {
         this.money = this.options.money;
         this.squareSize = this.map.squareSize;
         this.waves = this.options.waves || [];
+        this.turretsData = this.options.turretsData || [];
 
         this.container = document.querySelector(this.options.id);
         this.entrySquares = [];
@@ -55,11 +56,6 @@ class Game {
         });
 
         this.grid = new PF.Grid(this.cols, this.rows);
-
-        // this.grid.setWalkableAt(9, 10, false);
-        // this.grid.setWalkableAt(10, 10, false);
-        // this.grid.setWalkableAt(11, 10, false);
-
     }
 
     async build() {
@@ -73,6 +69,10 @@ class Game {
             this.controls = new Controls(this);
             this.controls.setLives(this.lives);
             this.controls.setMoney(this.money);
+
+            this.turretsData.forEach(t => {
+                this.controls.addTurretButton(t.name, ucFirst(t.name));
+            })
 
         } catch (error) {
             throw error;
@@ -204,23 +204,25 @@ class Game {
 
         let type = [turretType, turretCat].join('-');
         switch (type) {
-            case 'big-basic':
+            case 'big-vulcan':
                 turretClass = BigTurret;
                 break;
-            case 'big-red':
+            case 'big-plasma':
                 turretClass = BigRedTurret;
                 break;
-            case 'small-basic':
-                turretClass = Turret;
-                break;
-            case 'small-red':
-                turretClass = RedTurret;
-                break;
         }
+
+        let turretData = this.turretsData.find(d => d.name === turretCat);
 
         let turret = new turretClass({
             x: x,
             y: y,
+            cost: turretData.cost,
+            range: turretData.range,
+            dmg: turretData.damage,
+            speed: turretData.speed,
+            name: turretData.name,
+            data: turretData,
             game: this
         });
 

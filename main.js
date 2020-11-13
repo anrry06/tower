@@ -16,10 +16,13 @@ let map = {
     squareSize: 20
 }
 
+// console.log(turretsJson);
+
 let tower = new Game({
     id: 'tower',
     map: map,
-    waves: waves
+    waves: wavesJson,
+    turretsData: turretsJson
 });
 
 tower.build().then(() => {

@@ -58,17 +58,33 @@ class Board {
     initEvents() {
         this.container.onclick = this.click;
         this.container.onmousemove = this.mousemove;
+        this.container.onmouseout = this.mouseout;
     }
 
     click = (e) => {
         e.preventDefault();
 
+        console.log('click board');
+
         let coord = this.coord.toGrid(e.offsetX, e.offsetY, this.game.squareSize);
         this.game.addTurret(...coord)
+        this.game.controls.hideUpgrade()
     }
 
+    mouseout = (e) => {
+        if(this.prevSquares.length > 0){
+            this.prevSquares.forEach(ps => {
+                if(ps)
+                    ps.attr({ fill: config.squareStyle.lightgray.white })
+            })
+            this.prevSquares = [];
+        }
+    }
     mousemove = (e) => {
         e.preventDefault();
+        if(this.game.controls.turretType === null){
+            return;
+        }
         if(this.prevSquares.length > 0){
             this.prevSquares.forEach(ps => {
                 if(ps)

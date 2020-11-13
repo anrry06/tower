@@ -32,3 +32,14 @@
     float: left;
     margin-left: 10px;
 }
+
+.list-group {
+    line-height: 18px;
+}
+.list-group li {
+    padding: .3rem 1.25rem;
+}
+
+#upgrade-infos button.list-group-item-light {
+    cursor: not-allowed;
+}
